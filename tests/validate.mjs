@@ -1,0 +1,14 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';import path from 'node:path';
+const root=path.resolve(import.meta.dirname,'..');
+const data=JSON.parse(fs.readFileSync(path.join(root,'data/catalog.json'),'utf8'));
+assert.equal(data.modules.length,73,'V3 module count');
+assert.equal(data.legacy.length,73,'Historical crosswalk count');
+assert.equal(new Set(data.modules.map(m=>m.id)).size,73,'Unique module ids');
+assert.equal(new Set(data.modules.map(m=>m.group)).size,14,'Fourteen navigation groups');
+assert.equal(new Set(data.legacy.map(l=>l.source)).size,73,'Unique historic menus');
+for(const x of data.legacy)assert(data.modules.some(m=>m.id===x.moduleId&&m.name===x.target),`${x.source}: broken mapping`);
+for(const m of data.modules)assert(m.name&&m.description&&m.kind&&m.features.length>=4,`Incomplete module ${m.id}`);
+assert.equal(data.demoOnly,true);
+assert.equal(data.sourceDocumentedActions,606);
+for(const p of ['index.html','data/catalog.js','assets/styles.css','assets/app.js'])assert(fs.statSync(path.join(root,p)).size>100);
+console.log('PASS: 73 modules, 14 groups, 73 historical mappings, source reference 606 actions, no fake app completion.');
